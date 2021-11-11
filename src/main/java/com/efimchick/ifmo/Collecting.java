@@ -3,6 +3,7 @@ package com.efimchick.ifmo;
 import com.efimchick.ifmo.util.CourseResult;
 import com.efimchick.ifmo.util.Person;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -50,7 +51,7 @@ public class Collecting {
 
     public Map<Person, Double> totalScores(Stream<CourseResult> courseResultStream) {
         List<CourseResult> courseResultList = courseResultStream.collect(Collectors.toList());
-        int courseCountSize = coursesCount(courseResultList.stream());
+        long coursesAmount = coursesAmount(courseResultList);
         return courseResultList
             .stream()
             .collect(Collectors.groupingBy(
@@ -60,19 +61,22 @@ public class Collecting {
                     .values()
                     .stream()
                     .reduce(Integer::sum)
-                    .orElse(0) / courseCountSize)
+                    .orElse(0) / coursesAmount)
             ));
     }
 
-    private static int coursesCount(Stream<CourseResult> courseResultStream) {
-        Set<String> coursesSet = new HashSet<>();
-        courseResultStream.forEach(s -> s.getTaskResults().forEach((k, v) -> coursesSet.add(k)));
-        return coursesSet.size();
+    private static long coursesAmount(List<CourseResult> courseResultList) {
+        return courseResultList
+            .stream()
+            .map(s -> s.getTaskResults().keySet())
+            .flatMap(Collection::stream)
+            .distinct()
+            .count();
     }
 
     public double averageTotalScore(Stream<CourseResult> courseResultStream) {
         List<CourseResult> courseResultList = courseResultStream.collect(Collectors.toList());
-        int courseCountSize = coursesCount(courseResultList.stream());
+        long coursesAmount = coursesAmount(courseResultList);
         int courseResultSize = courseResultList.size();
         return courseResultList
             .stream()
@@ -81,7 +85,7 @@ public class Collecting {
                 .values()
                 .stream()
                 .reduce(Integer::sum)
-                .orElse(0) / (courseCountSize * courseResultSize)
+                .orElse(0) / (coursesAmount * courseResultSize)
             )
             .sum();
     }
